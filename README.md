@@ -122,8 +122,13 @@ This is an evolving repository. You can add:
 
 ## 📧 Contact
 
+**Author:** Ali Mohamed Hashish  
 Created as part of ITI Materials on Optimization  
 Date: February 2026
+
+## 📜 License
+
+This project is licensed under the **MIT License**.
 
 ---
 
