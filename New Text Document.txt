@@ -1,0 +1,208 @@
+- learning rate scheduing: changing lr during training instead of keeping it fixed.
+  - adaptive lr: ADAGRAD, Adam, RMS Prop
+
+- adaptive algorithm: sets the lr automatically during training to overcome the sparse and dense features problems
+  - we start with big lr and then decrease by time
+  - we move fast because sometimes when we initalize params randomly might be it is away from the optima solution
+  - is not effecient by itself so we sometimes combine it with some variations of GD (Momentum, ADAM, NAG)
+
+
+------------
+
+1- AdaGrad: update lr with each time step and multiplied by the gradient, it ensures that sparse features gets updated
+   - mentions how it works
+   - write the formula (vectorized | unvectorized)
+   - talk about element wise multipliocation briefly (Hadamard product)
+   - lr is in inverse direction of the gradient (increase lr wrt small gradient (for sparce features)): so that we increase the update step
+     - lr = alpha / f(grad) + eps (for numerical stability), f(grad) to be always positive
+     - wemkeeep track of gradient histroy, why ?
+     - we use the velocity from momentum, v = v_old + (grad) ** 2  =? because we need positive number
+     -> new_lr(i) = fixed_lr / sqrt( v(i) + epsilon )
+        - lr for weight feature i at step t
+        - it will cause large step size in (exploding gradients), and the lr increases overtime because it cumulates the past gradients squared in v
+  - mention what is the problems within it, and what the role of gradients in this prolemes
+
+
+2- RMSProp: what is the formula ?
+            - what is weighted average ? 
+            - beta [0.8-0.999]                      
+            - beta controls the propagation as it is a fraction multiplied by square gradients so it make it bounded, and give more weight to the last gradient
+            - the formula is exponentially weighted moving average
+  - problem: the step is small in the first few steps, because of the (1-beta)*grad^2
+    - contributions of the first n-1 steps is so small so it depends on the gradient only at step n
+ - what happens in case of increasing \ decreasing beta with example, and how history changes ?
+ - bias in RMSProp: difference between predicted value and the actual value.
+   - explain bias more accuratley with example
+   - what is bias correction, its formula and how it correct it either in first few steps or later steps
+
+3- Adam: momentum + RMSProp
+
+
+----------------
+
+- Newton method: use second dervative of cost function to find the zero of function
+  - converges faster thean Gradient based algorithms
+  - complex to compute due to computitional cost of hessian (n^2) and the inverse (n^3)
+
+- Newton method variations: Quasi-Newton Methods as it doesn't compute the inverse of the hessian matrix
+
+
+
+
+_____________________________________________________
+
+
+Types of Adaptive Learning Rate
+
+There are several types of adaptive learning rates, each with its strengths and weaknesses:
+
+1- Step-Size Adaptation: This method involves adjusting the learning rate 
+                         based on the magnitude of the gradient updates.
+                         If the update is large, the learning rate is reduced to prevent overshooting.
+  - Ex: RMSProp, ADAGRAD
+
+
+2- Adaptive Learning Rate Schedulers (e.g., Adam): These methods use a combination of exponential decay and momentum
+                   to adjust the learning rate. 
+                   They’re particularly effective in deep neural networks.
+
+3- Learning Rate Annealing: This technique involves gradually decreasing the learning rate over time,
+                            often using a cosine or exponential schedule.
+
+
+
+Adaptive learning rates offer several benefits:
+
+1- Improved Convergence: By adjusting the learning rate dynamically, 
+adaptive methods can converge faster and more accurately.
+2- Reduced Overfitting: Adaptive learning rates help prevent overfitting by avoiding large oscillations in the parameter updates.
+3- Increased Stability: Dynamic learning rates reduce the risk of exploding or vanishing gradients.
+
+
+_____________________________________________________
+
+
+What is AdaGrad?
+
+AdaGrad stands for Adaptive Gradient, and it’s a modification of gradient descent that adjusts the learning rate dynamically for each parameter.
+Traditional gradient descent methods keep a fixed learning rate, 
+which doesn’t always work well for sparse features.
+
+*Sparse features*: are those where most values are zero, such as a dataset with lots of
+ missing or inactive features.
+
+
+useful for dealing with this type of data because it adapts to the sparse nature of the dataset, 
+making it easier to learn the important features without getting “stuck” on the zeros.
+
+AdaGrad’s biggest strength is in handling sparse data by adjusting the learning rate. 
+Let’s say we have a dataset where only a few features, like “CGPA” or “IQ,” have non-zero values. Most other features are zeros,
+which can make learning slow with traditional gradient descent. 
+AdaGrad adjusts the learning rate for each parameter based on its gradient history
+
+
+___________________________________________________
+
+
+How AdaGrad Works: The Math Explained
+
+Gradient Descent Recap: Gradient descent works by updating each weight, w, based on the gradient of the loss function, which shows the direction to minimize error. With each iteration, w is updated by subtracting learning rate × gradient.
+Adaptive Learning Rate in AdaGrad: AdaGrad modifies this by using different learning rates for each weight. As it accumulates the gradient of each parameter, it divides the learning rate by the square root of the sum of past gradients squared. This effectively reduces the learning rate for parameters with high gradients, allowing it to focus on features that change less.
+
+Here’s the formula:
+
+
+where:
+
+v(t)​ = Sum of past squared gradients
+ϵ = Small constant to avoid division by zero (10e-8)
+
+
+
+Example:
+
+Dataset
+
+Features:
+
+IQ
+
+CGPA
+
+Placement Package (target)
+
+Assume:
+
+IQ is almost always zero (sparse)
+
+CGPA is non-zero most of the time (dense)
+
+- What happens in normal Gradient Descent?
+
+CGPA gets updated every step
+
+IQ gets updated once in a while
+
+Result:
+
+CGPA learns fast
+
+IQ learns very slowly (or almost not at all)
+
+📌 Sparse features are ignored.
+
+
+- What AdaGrad does: provide the steps without using math
+
+
+___________________________________________________
+
+
+AdaGrad’s Strengths and Weaknesses
+
+Strengths:
+
+Great for Sparse Data: AdaGrad works well for features with many zeros because it adapts the learning rate for each feature based on its gradient history.
+No Manual Tuning of Learning Rates: The adaptive learning rate means you don’t have to adjust the learning rate manually for each parameter.
+
+
+Weaknesses:
+
+Converges Slowly for Complex Problems: Over time, the accumulated gradients make the learning rate so small that the algorithm stops making meaningful updates.
+Limited Use in Neural Networks: AdaGrad is rarely used in deep neural networks because it slows down too much due to its shrinking learning rate.
+
+
+To overcome this, optimizers like RMSProp and Adam were developed to address AdaGrad’s limitations.
+
+
+
+___________________________________________________
+
+
+What is RMSProp?
+RMSProp was introduced to solve a problem inherent to AdaGrad: the diminishing learning rate. While AdaGrad adapts the learning rate based on the gradient accumulation for each parameter, it tends to reduce the learning rate too drastically over time, causing the model to stop learning effectively.
+
+track of an exponentially decaying average of the squared gradients.
+This means that RMSProp gives more weight to recent gradients, allowing it to adapt more effectively without diminishing the learning rate too quickly.
+
+β is a decay rate.
+
+When to Use RMSProp
+Recurrent Neural Networks (RNNs): RMSProp is particularly useful in RNNs and other models prone to vanishing or exploding gradients.
+Sparse Data: RMSProp handles sparse data effectively, adjusting learning rates dynamically based on recent gradient values..
+
+___________________________________________________
+
+Resources: 
+
+[Adaptive Learning Rate Optimizers in nutshell]
+https://medium.com/@sharathhebbar24/adaptive-learning-rate-0cb6c6a9c620
+
+
+[ADAGRAD]
+https://medium.com/@piyushkashyap045/understanding-adagrad-optimization-in-deep-learning-bdd26467d5ab
+--> Notice: The provided example is logically wrong
+
+
+[RMSProp]
+https://medium.com/@piyushkashyap045/understanding-rmsprop-a-simple-guide-to-one-of-deep-learnings-powerful-optimizers-403baeed9922
